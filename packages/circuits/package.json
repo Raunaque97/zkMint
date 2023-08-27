@@ -1,0 +1,12 @@
+{
+  "name": "@se-2/circuits",
+  "scripts": {
+    "compile": "./compile.sh"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
+    "ffjavascript": "^0.2.56",
+    "snarkjs": "^0.4.27"
+  }
+}
