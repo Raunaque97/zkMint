@@ -1,5 +1,6 @@
 {
   "name": "@se-2/circuits",
+  "type": "module",
   "scripts": {
     "compile": "./compile.sh"
   },
@@ -8,5 +9,8 @@
     "circomlibjs": "^0.1.7",
     "ffjavascript": "^0.2.56",
     "snarkjs": "^0.4.27"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.6"
   }
 }
