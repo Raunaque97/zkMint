@@ -54,8 +54,8 @@ const input = {
   receiver: BigInt(ReceiverAddress).toString(),
 };
 // console.log("input:", input);
-// save input to file
-writeFileSync("input.json", JSON.stringify(input));
+// save input to file in the same directory as this file
+writeFileSync("input.json", JSON.stringify(input, null, 2));
 
 // check if the .wasm & .zkey files exist else quit
 if (!existsSync("coupon.wasm")) {

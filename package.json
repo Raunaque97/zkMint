@@ -11,6 +11,7 @@
   },
   "scripts": {
     "circuit:compile": "yarn workspace @se-2/circuits compile",
+    "circuit:test": "yarn workspace @se-2/circuits test",
     "account": "yarn workspace @se-2/hardhat account",
     "chain": "yarn workspace @se-2/hardhat chain",
     "fork": "yarn workspace @se-2/hardhat fork",

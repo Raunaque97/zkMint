@@ -2,7 +2,8 @@
   "name": "@se-2/circuits",
   "type": "module",
   "scripts": {
-    "compile": "./compile.sh"
+    "compile": "./compile.sh",
+    "test": "node test/coupon.test.js"
   },
   "dependencies": {
     "circomlib": "^2.0.5",
