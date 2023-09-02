@@ -1,18 +1,46 @@
 import { useState } from "react";
+// @ts-ignore
+import { buildEddsa, buildPoseidon } from "circomlibjs";
+import { randomBytes } from "crypto";
 import type { NextPage } from "next";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ClipboardIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
+import { toHexString } from "~~/utils/helpers";
 
 const Home: NextPage = () => {
   const [couponUrl, setCouponUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  function generateUrl() {
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000/";
+  const eddsaPvtKy = "0x2c80ca854bbb751f8a564774b155eb740017badcb0c696d984eb5fad9883de03";
+
+  async function generateUrl() {
     setIsGenerating(true);
-    setTimeout(() => {
-      const coupon = "https://zk-mint.vercel.app/coupon/" + Math.floor(Math.random() * 1000000);
-      setCouponUrl(coupon.toString());
-    }, 3000);
+    console.log("start");
+    let time = new Date().getTime();
+    const eddsa = await buildEddsa();
+    const poseidon = await buildPoseidon();
+    console.log("buildEddsa: ", (new Date().getTime() - time) / 1000);
+    time = new Date().getTime();
+    // get public key from private key
+    const codeInHex = toHexString(randomBytes(31));
+    const code = BigInt("0x" + codeInHex).toString();
+    const { R8, S } = eddsa.signMiMCSponge(eddsaPvtKy, poseidon([code]));
+    const data = {
+      code: codeInHex,
+      R8: [toHexString(R8[0]), toHexString(R8[1])],
+      S: S.toString(16),
+    };
+    console.log("data: ", data, (new Date().getTime() - time) / 1000);
+    const url = `${baseUrl}/mint?data=${encodeURIComponent(JSON.stringify(data))}`;
+    setCouponUrl(url);
+    setIsGenerating(false);
+  }
+
+  function copyToClipboard() {
+    if (couponUrl && couponUrl.length > 0) {
+      navigator.clipboard.writeText(couponUrl);
+    }
   }
 
   return (
@@ -72,18 +100,28 @@ const Home: NextPage = () => {
           <div className="m-8 md:w-1/2">
             <h1 className="text-2xl font-bold mb-8"> Demo </h1>
             <div className="flex flex-wrap my-3 justify-end">
-              <div className="bg-secondary border border-gray-500 flex-grow h-7 my-3 min-w-[200px] md:h-12 md:mr-4">
-                {couponUrl}
+              <div className="bg-secondary relative border border-gray-500 w-1 flex-grow h-7 my-3 min-w-[200px] md:h-12 md:mr-4">
+                <div className="text-clip overflow-hidden bg-gradient-to-r from-white to-transparent from-70% to-90% text-transparent bg-clip-text h-7 md:h-12 break-all">
+                  {couponUrl}
+                </div>
+                <button
+                  className="absolute right-0 top-0 active:scale-75 transition-transform"
+                  title="copy url"
+                  onClick={copyToClipboard}
+                >
+                  <ClipboardIcon className="w-6 h-6 md:w-11 md:h-11" />
+                </button>
+                {couponUrl.length > 0 && (
+                  <a className="link" href={couponUrl} target="_blank" rel="noopener noreferrer">
+                    Open in new tab
+                  </a>
+                )}
               </div>
-              <button className="btn my-3 w-[25ch]" disabled={isGenerating} onClick={generateUrl}>
-                {couponUrl.length > 0 ? (
+              <button className="btn my-3 w-[25ch] transition-colors" disabled={isGenerating} onClick={generateUrl}>
+                {isGenerating ? (
                   <>
-                    <Cog6ToothIcon className="w-6 h-6" />
-                    Generated
-                  </>
-                ) : isGenerating ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm" />
+                    {/* <span className="loading loading-spinner loading-sm" /> */}
+                    <Cog6ToothIcon className="w-6 h-6 animate-spin" />
                     Generating . . .
                   </>
                 ) : (
