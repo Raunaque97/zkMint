@@ -1,4 +1,5 @@
 import { ChangeEvent, ReactNode, useCallback } from "react";
+import { useDarkMode } from "usehooks-ts";
 import { CommonInputProps } from "~~/components/scaffold-eth";
 
 type InputBaseProps<T> = CommonInputProps<T> & {
@@ -17,6 +18,8 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   prefix,
   suffix,
 }: InputBaseProps<T>) => {
+  const { isDarkMode } = useDarkMode();
+
   let modifier = "";
   if (error) {
     modifier = "border-error";
@@ -32,10 +35,16 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   );
 
   return (
-    <div className={`flex border-2 border-base-300 bg-base-200 rounded-full text-accent ${modifier}`}>
+    <div
+      className={`flex border-2 border-base-300 ${
+        isDarkMode ? "bg-slate-950" : " bg-neutral-300"
+      } rounded-full text-accent ${modifier}`}
+    >
       {prefix}
       <input
-        className="input input-ghost focus:outline-none focus:bg-transparent focus:text-gray-400 h-[2.2rem] min-h-[2.2rem] px-4 border w-full font-medium placeholder:text-accent/50 text-gray-400"
+        className={`input input-ghost h-[2.2rem] min-h-[2.2rem] px-4 border w-full font-medium placeholder:text-gray-600 ${
+          isDarkMode ? "text-gray-400 bg-slate-950" : " text-gray-800 bg-neutral-300"
+        }`}
         placeholder={placeholder}
         name={name}
         value={value?.toString()}
