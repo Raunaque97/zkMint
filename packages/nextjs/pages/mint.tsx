@@ -1,34 +1,80 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { NextPage } from "next";
 import { Header } from "~~/components/Header";
 import { MetaHeader } from "~~/components/MetaHeader";
 import { Card3d } from "~~/components/card3d/card3d";
 import { AddressInput } from "~~/components/scaffold-eth";
+import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
+import { fromHexString, generateProof, verifySign } from "~~/utils/helpers";
 
 const MintPage: NextPage = () => {
   const [receiverAddr, setReceiverAddr] = useState("");
   const [isLinkValid, setIsLinkValid] = useState(undefined as undefined | boolean);
   const [generatingProof, setGeneratingProof] = useState(false);
-  const [proofReady, setProofReady] = useState(false);
+  const [proof, setProof] = useState(undefined as undefined | { a: any; b: any; c: any; publicSignals: any });
+  // TODO check nullifier to see already minted
+  const { data: Ax } = useScaffoldContractRead({
+    contractName: "YourContract",
+    functionName: "Ax",
+  });
+  const { data: Ay } = useScaffoldContractRead({
+    contractName: "YourContract",
+    functionName: "Ay",
+  });
+  useEffect(() => {
+    if (Ax && Ay) {
+      checkLink();
+    }
+  }, [Ax, Ay]);
+
+  useEffect(() => {
+    if (!generatingProof && receiverAddr && receiverAddr.length == 42 && receiverAddr.startsWith("0x")) {
+      setGeneratingProof(true);
+      generateAndSetProof().finally(() => {
+        setGeneratingProof(false);
+      });
+    }
+  }, [receiverAddr]);
 
   function checkLink() {
-    // TODO
-    setTimeout(() => {
-      setIsLinkValid(true);
-    }, 3000);
+    try {
+      const url = new URL(window.location.href);
+      const data = url.searchParams.get("data");
+      if (data == null || Ax == undefined || Ay == undefined) {
+        setIsLinkValid(false);
+        return;
+      }
+      const { code, R8: R8hex, S: Shex } = JSON.parse(data);
+      const R8 = [fromHexString(R8hex[0]), fromHexString(R8hex[1])];
+      verifySign(code, R8, BigInt("0x" + Shex), Ax, Ay).then(res => {
+        console.log("checkLink: verifySign: ", res);
+        setIsLinkValid(res);
+      });
+    } catch (e) {
+      console.error("checkLink: ", e);
+      setIsLinkValid(false);
+    }
   }
 
-  function generateProof() {
-    console.log("generateProof");
-    setGeneratingProof(true);
-    // TODO
-    setTimeout(() => {
-      setGeneratingProof(false);
-      setProofReady(true);
-    }, 2000);
+  async function generateAndSetProof() {
+    console.log("generatingProof");
+    const t = Date.now();
+    const url = new URL(window.location.href);
+    const data = url.searchParams.get("data");
+    if (data == null || Ax == undefined || Ay == undefined) {
+      setIsLinkValid(false);
+      return;
+    }
+    const { code, R8: R8hex, S: Shex } = JSON.parse(data);
+    const R8 = [fromHexString(R8hex[0]), fromHexString(R8hex[1])];
+    const proof = await generateProof(receiverAddr, code, R8, BigInt("0x" + Shex), Ax, Ay);
+    console.log("generated  Proof in", (Date.now() - t) / 1000);
+    setProof(proof);
   }
 
-  checkLink();
+  function mintNFT() {
+    console.log("mint");
+  }
 
   return (
     <>
@@ -59,7 +105,7 @@ const MintPage: NextPage = () => {
               </div>
             </>
           )}
-          {receiverAddr.length == 42 && receiverAddr.startsWith("0x") && proofReady && (
+          {receiverAddr.length == 42 && receiverAddr.startsWith("0x") && (
             <div className="mt-5">
               <Card3d
                 content={
@@ -70,9 +116,13 @@ const MintPage: NextPage = () => {
                     <p className="text-9xl">?</p>
                     <button
                       className="bg-yellow-500 py-1 px-4 border-2 border-yellow-950 text-black font-bold strong rounded-lg text-lg animate-bounce hover:animate-none active:brightness-90 active:scale-90 z-50"
-                      onClick={generateProof}
+                      onClick={mintNFT}
                     >
-                      {generatingProof ? <span className="loading loading-spinner loading-md" /> : "MINT"}
+                      {generatingProof || proof == undefined ? (
+                        <span className="loading loading-dots loading-md" />
+                      ) : (
+                        "MINT"
+                      )}
                     </button>
                   </div>
                 }

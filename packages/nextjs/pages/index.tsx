@@ -5,14 +5,14 @@ import { randomBytes } from "crypto";
 import type { NextPage } from "next";
 import { ClipboardIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
-import { toHexString } from "~~/utils/helpers";
+import { fromHexString, toHexString } from "~~/utils/helpers";
 
 const Home: NextPage = () => {
   const [couponUrl, setCouponUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000/";
-  const eddsaPvtKy = "0x2c80ca854bbb751f8a564774b155eb740017badcb0c696d984eb5fad9883de03";
+  const eddsaPvtKy = fromHexString("0x2c80ca854bbb751f8a564774b155eb740017badcb0c696d984eb5fad9883de03");
 
   async function generateUrl() {
     setIsGenerating(true);
@@ -24,6 +24,7 @@ const Home: NextPage = () => {
     time = new Date().getTime();
     // get public key from private key
     const codeInHex = toHexString(randomBytes(31));
+    // const codeInHex = "c184baa56b137b7129ea145494f86dafb92dcce74cb0197b38ad4df33708ff";
     const code = BigInt("0x" + codeInHex).toString();
     const { R8, S } = eddsa.signMiMCSponge(eddsaPvtKy, poseidon([code]));
     const data = {

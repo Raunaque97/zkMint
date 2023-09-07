@@ -1,11 +1,11 @@
 import { buildEddsa, buildPoseidon } from "circomlibjs";
 import * as ffj from "ffjavascript";
-import * as snarkjs from "snarkyjs";
+
+const groth16 = require("snarkjs").groth16;
 
 export function fromHexString(hexString: string): Uint8Array {
   if (hexString == null) return new Uint8Array();
   if (hexString.startsWith("0x")) hexString = hexString.slice(2);
-  if (hexString.length % 2 !== 0) throw new Error("Must have an even number of hex digits");
   // @ts-ignore
   return new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 }
@@ -16,47 +16,57 @@ export function toHexString(bytes: Uint8Array): string {
 export function toDecimalString(bytes: Uint8Array): string {
   return BigInt("0x" + toHexString(bytes)).toString();
 }
-
-export async function verifySign(code: string, R8: string[], S: string, A: string[]): Promise<boolean> {
+/**
+ *
+ * @param code is a hex string
+ * @param R8 is in montgomery form
+ * @param S is a bigint
+ * @param Ax is a bigint of canonical form
+ * @param Ay is a bigint of canonical form
+ * @returns
+ */
+export async function verifySign(code: string, R8: Uint8Array[], S: bigint, Ax: bigint, Ay: bigint): Promise<boolean> {
   const eddsa = await buildEddsa();
   const poseidon = await buildPoseidon();
-  console.log("verifySign", code, R8, S, A);
-  console.log("hash", poseidon([toDecimalString(fromHexString(code))]));
-  console.log("R8", [fromHexString(R8[0]), fromHexString(R8[1])]);
-
-  return eddsa.verifyMiMCSponge(
-    poseidon([toDecimalString(fromHexString(code))]),
-    { R8: [fromHexString(R8[0]), fromHexString(R8[1])], S: BigInt(S) },
-    [fromHexString(A[0]), fromHexString(A[1])],
-  );
+  // convert Ax, Ay to montgomery form
+  const A = [eddsa.babyJub.F.e(Ax.toString()), eddsa.babyJub.F.e(Ay.toString())];
+  return eddsa.verifyMiMCSponge(poseidon([toDecimalString(fromHexString(code))]), { R8, S }, A);
 }
-
-export async function generateProof(receiverAddr: string, code: string, R8: string[], S: string, A: string[]) {
+/**
+ * @param receiverAddr in hex string 0x...
+ * @param code is a hex string
+ * @param R8 is in montgomery form
+ * @param S is bigint in canonical form
+ * @param Ax is a hex string of canonical form
+ * @param Ay is a hex string of canonical form
+ * @returns
+ */
+export async function generateProof(
+  receiverAddr: string,
+  code: string,
+  R8: Uint8Array[],
+  S: bigint,
+  Ax: bigint,
+  Ay: bigint,
+) {
   const eddsa = await buildEddsa();
-
-  // A, R8 are in Montgomery form, convert to int to pass to snarkjs
-  const Ax = ffj.utils.leBuff2int(eddsa.F.fromMontgomery(fromHexString(A[0])));
-  const Ay = ffj.utils.leBuff2int(eddsa.F.fromMontgomery(fromHexString(A[1])));
-  const R8x = ffj.utils.leBuff2int(eddsa.F.fromMontgomery(fromHexString(R8[0])));
-  const R8y = ffj.utils.leBuff2int(eddsa.F.fromMontgomery(fromHexString(R8[1])));
-
+  // R8 are in Montgomery form, convert to int to pass to snarkjs
+  const R8x = ffj.utils.leBuff2int(eddsa.F.fromMontgomery(R8[0]));
+  const R8y = ffj.utils.leBuff2int(eddsa.F.fromMontgomery(R8[1]));
   const input = {
     code: toDecimalString(fromHexString(code)),
-    Ax: BigInt(Ax).toString(),
-    Ay: BigInt(Ay).toString(),
+    Ax: Ax.toString(),
+    Ay: Ay.toString(),
     R8x: BigInt(R8x).toString(),
     R8y: BigInt(R8y).toString(),
-    S: toDecimalString(fromHexString(S)),
+    S: S.toString(),
     receiver: BigInt(receiverAddr).toString(),
   };
-  console.log("input", input);
-  const { proof, publicSignals } = await snarkjs.groth16.fullProve(input, "coupon.wasm", "coupon.zkey");
-  // console.log("proof", proof);
-  // console.log("publicSignals", publicSignals);
-
+  // console.log("input", input);
+  const { proof, publicSignals } = await groth16.fullProve(input, "coupon.wasm", "coupon.zkey");
   //convert proof to solidity inputs
   const { a, b, c } = getABCFrom(proof);
-  console.log([a, b, c, publicSignals]);
+  // console.log([a, b, c, publicSignals]);
   return { a, b, c, publicSignals };
 }
 
