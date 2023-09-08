@@ -4,7 +4,7 @@ import { Header } from "~~/components/Header";
 import { MetaHeader } from "~~/components/MetaHeader";
 import { Card3d } from "~~/components/card3d/card3d";
 import { AddressInput } from "~~/components/scaffold-eth";
-import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
+import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { fromHexString, generateProof, verifySign } from "~~/utils/helpers";
 
 const MintPage: NextPage = () => {
@@ -12,6 +12,7 @@ const MintPage: NextPage = () => {
   const [isLinkValid, setIsLinkValid] = useState(undefined as undefined | boolean);
   const [generatingProof, setGeneratingProof] = useState(false);
   const [proof, setProof] = useState(undefined as undefined | { a: any; b: any; c: any; publicSignals: any });
+  const [mintConfirmation, setMintConfirmation] = useState(false);
   // TODO check nullifier to see already minted
   const { data: Ax } = useScaffoldContractRead({
     contractName: "YourContract",
@@ -21,6 +22,16 @@ const MintPage: NextPage = () => {
     contractName: "YourContract",
     functionName: "Ay",
   });
+  const { writeAsync: mintAsync, isLoading: isMinting } = useScaffoldContractWrite({
+    contractName: "YourContract",
+    functionName: "mint",
+    args: [proof?.a, proof?.b, proof?.c, proof?.publicSignals],
+    onBlockConfirmation: txnReceipt => {
+      console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+      setMintConfirmation(true);
+    },
+  });
+
   useEffect(() => {
     if (Ax && Ay) {
       checkLink();
@@ -74,6 +85,7 @@ const MintPage: NextPage = () => {
 
   function mintNFT() {
     console.log("mint");
+    mintAsync();
   }
 
   return (
@@ -113,22 +125,35 @@ const MintPage: NextPage = () => {
                     <div className="text-4xl">
                       <p>Zk-Mint</p>
                     </div>
-                    <p className="text-9xl">?</p>
-                    <button
-                      className="bg-yellow-500 py-1 px-4 border-2 border-yellow-950 text-black font-bold strong rounded-lg text-lg animate-bounce hover:animate-none active:brightness-90 active:scale-90 z-50"
-                      onClick={mintNFT}
-                    >
-                      {generatingProof || proof == undefined ? (
-                        <span className="loading loading-dots loading-md" />
-                      ) : (
-                        "MINT"
-                      )}
-                    </button>
+                    {isMinting && <span className="loading loading-spinner w-36" />}
+                    {/* TODO display img from nft */}
+                    {mintConfirmation && <p className="text-9xl font-bai-jamjuree">1</p>}
+                    {!isMinting && !mintConfirmation && (
+                      <>
+                        <p className="text-9xl">?</p>
+                        <div className="relative group">
+                          <button
+                            className="bg-yellow-500 relative py-1 px-4 border-2 border-yellow-950 text-black font-bold strong rounded-lg text-lg active:brightness-90 active:scale-90 z-50"
+                            onClick={mintNFT}
+                          >
+                            {generatingProof || proof == undefined ? (
+                              <span className="loading loading-dots loading-md" />
+                            ) : (
+                              "MINT"
+                            )}
+                          </button>
+                          {proof && (
+                            <div className="absolute rounded-lg top-0 left-0 w-full h-full bg-[#ffffff70] group-hover:bg-transparent animate-ping z-40" />
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 }
               />
             </div>
           )}
+          {generatingProof && <div>Wait for zk-Proof generation to complete</div>}
         </div>
       </div>
     </>
