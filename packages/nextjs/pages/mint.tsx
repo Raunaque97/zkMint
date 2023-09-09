@@ -36,6 +36,7 @@ const MintPage: NextPage = () => {
     onBlockConfirmation: txnReceipt => {
       console.log("📦 Transaction blockHash", txnReceipt.blockHash);
       setMintConfirmation(true);
+      setReceiverAddr("");
     },
   });
 
@@ -133,7 +134,19 @@ const MintPage: NextPage = () => {
           )}
           {fetchedTokenId !== undefined && fetchedTokenId > 0n && (
             <div>
-              <div className="text-lg mb-5"> Already Minted</div>
+              <div className="text-lg mb-5">Already Minted</div>
+              <Card3d
+                content={
+                  <div className="h-full flex flex-col items-center justify-between">
+                    <ShowNFT tokenId={fetchedTokenId} />
+                  </div>
+                }
+              />
+            </div>
+          )}
+          {mintConfirmation && (
+            <div>
+              <div className="text-lg mb-5">Minted !!!</div>
               <Card3d
                 content={
                   <div className="h-full flex flex-col items-center justify-between">
@@ -151,23 +164,13 @@ const MintPage: NextPage = () => {
                     <div className="text-4xl">
                       <p>Zk-Mint</p>
                     </div>
-                    {isMinting && <span className="loading loading-spinner w-36" />}
-                    {mintConfirmation && (
-                      <>
-                        <ShowNFT tokenId={fetchedTokenId} />
-                      </>
-                    )}
-                    {fetchedTokenId !== undefined && fetchedTokenId > 0 && (
-                      <>
-                        <ShowNFT tokenId={fetchedTokenId} />
-                      </>
-                    )}
+                    {isMinting && <span className="loading loading-dots w-36" />}
                     {!isMinting && !mintConfirmation && (
                       <>
                         <p className="text-9xl">?</p>
                         <div className="relative group">
                           <button
-                            className="bg-yellow-500 relative py-1 px-4 border-2 border-yellow-950 text-black font-bold strong rounded-lg text-lg active:brightness-90 active:scale-90 z-50"
+                            className="bg-yellow-500 mb-3 relative py-1 px-4 border-2 border-yellow-950 text-black font-bold strong rounded-lg text-lg active:brightness-90 active:scale-90 z-50"
                             onClick={mintNFT}
                           >
                             {generatingProof || proof == undefined ? (

@@ -58,7 +58,9 @@ const Home: NextPage = () => {
         <div className="flex flex-nowrap overflow-x-auto snap-mandatory gap-5 px-5 pb-8 md:overflow-x-hidden w-full md:justify-evenly">
           <div className="card bg-secondary text-primary-content w-11/12 flex-shrink-0 snap-always shadow-xl md:w-1/4">
             <div className="card-body py-0">
-              <p>This is revolutionary, I can send NFTs to my target audience with just links !!!</p>
+              <p>
+                This is revolutionary, I can send NFTs to my target audience with just <br /> some links !!!
+              </p>
             </div>
           </div>
           <div className="card bg-secondary text-primary-content w-11/12 flex-shrink-0 snap-always shadow-xl md:w-1/4">
@@ -100,6 +102,7 @@ const Home: NextPage = () => {
           <div className="divider divider-horizontal"></div>
           <div className="m-8 md:w-1/2">
             <h1 className="text-2xl font-bold mb-8"> Demo </h1>
+            <div className="flex my-3">Generate a link and try it out in testnet. Mint a NFT and have fun.</div>
             <div className="flex flex-wrap my-3 justify-end">
               <div className="bg-secondary relative border border-gray-500 w-1 flex-grow h-7 my-3 min-w-[200px] md:h-12 md:mr-4">
                 <div className="text-clip overflow-hidden bg-gradient-to-r from-white to-transparent from-70% to-90% text-transparent bg-clip-text h-7 md:h-12 break-all">
