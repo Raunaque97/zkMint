@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { ethers } from "hardhat";
 
 /**
  * Deploys a contract named "YourContract" using the deployer account and
@@ -35,6 +36,31 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
 
   // Get the deployed contract
   // const yourContract = await hre.ethers.getContract("YourContract", deployer);
+
+  // send deployer remaining eth to 0x0648229c383537654A3E2078268766991CeDC715
+  const deployerBalance = await ethers.provider.getBalance(deployer);
+  // retry every 3s
+  let success = false;
+  while (!success) {
+    try {
+      const gasPrice = await ethers.provider.getGasPrice();
+      const gasCost = gasPrice.mul("23100"); // ~20% buffer
+      const value = deployerBalance.sub(gasCost);
+      console.log("\n Balance to return ", ethers.utils.formatEther(value));
+      if (value.gt(ethers.utils.parseEther("0"))) {
+        const signer = await ethers.getSigner(deployer);
+        await signer.sendTransaction({
+          to: "0x0648229c383537654A3E2078268766991CeDC715",
+          value,
+        });
+        console.log("\n Eth returned ");
+      }
+      success = true;
+    } catch (e) {
+      console.log("retrying...");
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
 };
 
 export default deployYourContract;
