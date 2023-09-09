@@ -131,7 +131,7 @@ const MintPage: NextPage = () => {
               </div>
             </>
           )}
-          {fetchedTokenId !== undefined && fetchedTokenId > 0n && receiverAddr !== "" && (
+          {fetchedTokenId !== undefined && fetchedTokenId > 0n && receiverAddr == "" && (
             <div>
               <div className="text-lg mb-5">Already Minted</div>
               <Card3d
@@ -155,7 +155,7 @@ const MintPage: NextPage = () => {
               />
             </div>
           )}
-          {receiverAddr.length == 42 && receiverAddr.startsWith("0x") && (
+          {!mintConfirmation && receiverAddr.length == 42 && receiverAddr.startsWith("0x") && (
             <div className="mt-5">
               <Card3d
                 content={
