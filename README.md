@@ -1,21 +1,29 @@
-# 🏗 Scaffold-ETH 2
+# ZK - Mint
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+### 🏗 Build Using Scaffold-ETH 2
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+🧪 A new revolutionary way to mint NFTs. Currently for permissioned minting (allowing only some people to mint), ie white/allow listing. All sorts of techniques are used like merkel proof based, signature based etc or simply storing map of addresses etc.
+But with all the above method one needs to collect the `receiver` addresses which is cumbersome & lengthly process.
+
+> But What if you can just send a link and anyone can mint using the link only once to a address of their choosing !!
+
+## Demo
+
+https://zk-mint.vercel.app/
+
+## How It works
+
+- The idea is to use a **secret** value and only some one who knows the secret should be able to mint.
+- A issuer/project owner creates the links to be shared. Each links contain a secret encoded in it.
+- But we cannot just simply include the secret in a blockchain transaction. **You will get frontrunned**. This is where _zk-Proofs_ come it.
+- the user **proofs** they knows a valid secret without revealing it.
+- For the secrets I used a eddsa signature of a random number. This way one can generate a unlimited amount of unque "secrets" with just storing a single eddsa public key in the contract. Also one can easily add metadata to the signature to create more interesting/complex minting (like encoding gurrantted traits in the mint)
+
+In this demo the eddsa keys are hardcoded, Use the code inside `coupon.test.js` to create your own secret eddsa keys.
 
 ⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, and Typescript.
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
-
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/1171422a-0ce4-4203-bcd4-d2d1941d198b)
-
-## Requirements
+### Requirements
 
 Before you begin, you need to install the following tools:
 
@@ -23,56 +31,24 @@ Before you begin, you need to install the following tools:
 - Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
 - [Git](https://git-scm.com/downloads)
 
-## Quickstart
+## Quickstart / run locally
 
 To get started with Scaffold-ETH 2, follow the steps below:
 
 1. Clone this repo & install dependencies
 
 ```
-git clone https://github.com/scaffold-eth/scaffold-eth-2.git
-cd scaffold-eth-2
-yarn install
+git clone https://github.com/Raunaque97/zkMint
+cd zkMint && yarn install
 ```
 
-2. Run a local network in the first terminal:
+2. Run `yarn circuit:compile` to compile the circom circuits and auto generate the `.wasm`, `*.zkey` & solidity `verifier.sol`.
+   But first copy a `*.ptau` file inside `packages/circuits`, Follow [Link](https://github.com/iden3/snarkjs) for details
+3. Run `yarn chain` to start a local dev network
+4. Run `yarn deploy` to deploy the contracts
+5. Finaly run `yarn start` to start NextJS dev server
 
-```
-yarn chain
-```
+### Testing
 
-This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `hardhat.config.ts`.
-
-3. On a second terminal, deploy the test contract:
-
-```
-yarn deploy
-```
-
-This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
-
-4. On a third terminal, start your NextJS app:
-
-```
-yarn start
-```
-
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the contract component or the example ui in the frontend. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
-
-Run smart contract test with `yarn hardhat:test`
-
-- Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
-- Edit your frontend in `packages/nextjs/pages`
-- Edit your deployment scripts in `packages/hardhat/deploy`
-
-## Documentation
-
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
-
-To know more about its features, check out our [website](https://scaffoldeth.io).
-
-## Contributing to Scaffold-ETH 2
-
-We welcome contributions to Scaffold-ETH 2!
-
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+- Run smart contract test with `yarn test`
+- Run zk circuit test script using with `yarn circuit:test`. runs the tests inside `./packages/circuits/test/coupon.test.js`

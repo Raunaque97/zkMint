@@ -55,7 +55,7 @@ describe("YourContract", function () {
     await expect(yourContract.mint(a, b, c, publicSignals)).to.be.not.reverted;
     const receiverAddr = "0x" + BigInt(publicSignals[3]).toString(16);
     expect(await yourContract.balanceOf(receiverAddr)).to.equal(1);
-    expect((await yourContract.ownerOf(0)).toLowerCase()).to.equal(receiverAddr.toLowerCase());
+    expect((await yourContract.ownerOf(1)).toLowerCase()).to.equal(receiverAddr.toLowerCase());
   });
 
   it("should not mint with same nullifier", async function () {
