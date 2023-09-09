@@ -36,7 +36,6 @@ const MintPage: NextPage = () => {
     onBlockConfirmation: txnReceipt => {
       console.log("📦 Transaction blockHash", txnReceipt.blockHash);
       setMintConfirmation(true);
-      setReceiverAddr("");
     },
   });
 
@@ -132,7 +131,7 @@ const MintPage: NextPage = () => {
               </div>
             </>
           )}
-          {fetchedTokenId !== undefined && fetchedTokenId > 0n && (
+          {fetchedTokenId !== undefined && fetchedTokenId > 0n && receiverAddr !== "" && (
             <div>
               <div className="text-lg mb-5">Already Minted</div>
               <Card3d
