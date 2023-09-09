@@ -1,6 +1,10 @@
+//@ts-ignore
 import { buildEddsa, buildPoseidon } from "circomlibjs";
+import { randomBytes } from "crypto";
+//@ts-ignore
 import * as ffj from "ffjavascript";
 
+//@ts-ignore
 const groth16 = require("snarkjs").groth16;
 
 export function fromHexString(hexString: string): Uint8Array {
@@ -20,6 +24,22 @@ export function toDecimalString(bytes: Uint8Array): string {
 export async function calcNullifier(code: string): Promise<bigint> {
   const poseidon = await buildPoseidon();
   return BigInt(poseidon.F.toString(poseidon([toDecimalString(fromHexString(code))])));
+}
+
+export async function generateUrl(baseUrl: string, eddsaPvtKy: Uint8Array): Promise<string> {
+  const eddsa = await buildEddsa();
+  const poseidon = await buildPoseidon();
+  // get public key from private key
+  const codeInHex = toHexString(randomBytes(31));
+  // const codeInHex = "c184baa56b137b7129ea145494f86dafb92dcce74cb0197b38ad4df33708ff";
+  const code = BigInt("0x" + codeInHex).toString();
+  const { R8, S } = eddsa.signMiMCSponge(eddsaPvtKy, poseidon([code]));
+  const data = {
+    code: codeInHex,
+    R8: [toHexString(R8[0]), toHexString(R8[1])],
+    S: S.toString(16),
+  };
+  return `${baseUrl}/mint?data=${encodeURIComponent(JSON.stringify(data))}`;
 }
 /**
  *

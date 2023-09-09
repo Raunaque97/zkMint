@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ReactNode, useEffect } from "react";
 
 export const Card3d = ({ content = <></> }: { content?: ReactNode }) => {

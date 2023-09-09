@@ -1,11 +1,9 @@
 import { useState } from "react";
 // @ts-ignore
-import { buildEddsa, buildPoseidon } from "circomlibjs";
-import { randomBytes } from "crypto";
 import type { NextPage } from "next";
 import { ClipboardIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
-import { fromHexString, toHexString } from "~~/utils/helpers";
+import { fromHexString, generateUrl } from "~~/utils/helpers";
 
 const Home: NextPage = () => {
   const [couponUrl, setCouponUrl] = useState("");
@@ -14,26 +12,10 @@ const Home: NextPage = () => {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000/";
   const eddsaPvtKy = fromHexString("0x2c80ca854bbb751f8a564774b155eb740017badcb0c696d984eb5fad9883de03");
 
-  async function generateUrl() {
+  async function generateDemoLink() {
     setIsGenerating(true);
     console.log("start");
-    let time = new Date().getTime();
-    const eddsa = await buildEddsa();
-    const poseidon = await buildPoseidon();
-    console.log("buildEddsa: ", (new Date().getTime() - time) / 1000);
-    time = new Date().getTime();
-    // get public key from private key
-    const codeInHex = toHexString(randomBytes(31));
-    // const codeInHex = "c184baa56b137b7129ea145494f86dafb92dcce74cb0197b38ad4df33708ff";
-    const code = BigInt("0x" + codeInHex).toString();
-    const { R8, S } = eddsa.signMiMCSponge(eddsaPvtKy, poseidon([code]));
-    const data = {
-      code: codeInHex,
-      R8: [toHexString(R8[0]), toHexString(R8[1])],
-      S: S.toString(16),
-    };
-    console.log("data: ", data, (new Date().getTime() - time) / 1000);
-    const url = `${baseUrl}/mint?data=${encodeURIComponent(JSON.stringify(data))}`;
+    const url = await generateUrl(baseUrl, eddsaPvtKy);
     setCouponUrl(url);
     setIsGenerating(false);
   }
@@ -121,7 +103,11 @@ const Home: NextPage = () => {
                   </a>
                 )}
               </div>
-              <button className="btn my-3 w-[25ch] transition-colors" disabled={isGenerating} onClick={generateUrl}>
+              <button
+                className="btn my-3 w-[25ch] transition-colors"
+                disabled={isGenerating}
+                onClick={generateDemoLink}
+              >
                 {isGenerating ? (
                   <>
                     {/* <span className="loading loading-spinner loading-sm" /> */}
