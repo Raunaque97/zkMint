@@ -215,6 +215,44 @@ const contracts = {
             {
               inputs: [
                 {
+                  internalType: "uint256",
+                  name: "tokenId",
+                  type: "uint256",
+                },
+              ],
+              name: "getImageURI",
+              outputs: [
+                {
+                  internalType: "string",
+                  name: "",
+                  type: "string",
+                },
+              ],
+              stateMutability: "pure",
+              type: "function",
+            },
+            {
+              inputs: [
+                {
+                  internalType: "string",
+                  name: "imageURI",
+                  type: "string",
+                },
+              ],
+              name: "imageURI2tokenURI",
+              outputs: [
+                {
+                  internalType: "string",
+                  name: "",
+                  type: "string",
+                },
+              ],
+              stateMutability: "pure",
+              type: "function",
+            },
+            {
+              inputs: [
+                {
                   internalType: "address",
                   name: "owner",
                   type: "address",
@@ -288,9 +326,9 @@ const contracts = {
               name: "nullifiers",
               outputs: [
                 {
-                  internalType: "bool",
+                  internalType: "uint256",
                   name: "",
-                  type: "bool",
+                  type: "uint256",
                 },
               ],
               stateMutability: "view",
