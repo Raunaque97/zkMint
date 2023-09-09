@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import type { NextPage } from "next";
 import { Header } from "~~/components/Header";
 import { MetaHeader } from "~~/components/MetaHeader";
+import { ShowNFT } from "~~/components/ShowNFT";
 import { Card3d } from "~~/components/card3d/card3d";
 import { AddressInput } from "~~/components/scaffold-eth";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
-import { fromHexString, generateProof, verifySign } from "~~/utils/helpers";
+import { calcNullifier, fromHexString, generateProof, verifySign } from "~~/utils/helpers";
 
 const MintPage: NextPage = () => {
   const [receiverAddr, setReceiverAddr] = useState("");
@@ -13,6 +14,7 @@ const MintPage: NextPage = () => {
   const [generatingProof, setGeneratingProof] = useState(false);
   const [proof, setProof] = useState(undefined as undefined | { a: any; b: any; c: any; publicSignals: any });
   const [mintConfirmation, setMintConfirmation] = useState(false);
+  const [nullifier, setNullifier] = useState(undefined as undefined | bigint);
   // TODO check nullifier to see already minted
   const { data: Ax } = useScaffoldContractRead({
     contractName: "YourContract",
@@ -21,6 +23,11 @@ const MintPage: NextPage = () => {
   const { data: Ay } = useScaffoldContractRead({
     contractName: "YourContract",
     functionName: "Ay",
+  });
+  const { data: fetchedTokenId } = useScaffoldContractRead({
+    contractName: "YourContract",
+    functionName: "nullifiers",
+    args: [nullifier],
   });
   const { writeAsync: mintAsync, isLoading: isMinting } = useScaffoldContractWrite({
     contractName: "YourContract",
@@ -60,6 +67,13 @@ const MintPage: NextPage = () => {
       verifySign(code, R8, BigInt("0x" + Shex), Ax, Ay).then(res => {
         console.log("checkLink: verifySign: ", res);
         setIsLinkValid(res);
+        // check if already minted
+        if (res) {
+          calcNullifier(code).then(nullifier => {
+            console.log("nullifier", nullifier);
+            setNullifier(nullifier);
+          });
+        }
       });
     } catch (e) {
       console.error("checkLink: ", e);
@@ -109,13 +123,25 @@ const MintPage: NextPage = () => {
               <span className="text-red-500 text-3xl">Invalid link !!!</span>
             </div>
           )}
-          {isLinkValid && (
+          {isLinkValid && (fetchedTokenId == undefined || fetchedTokenId == 0n) && (
             <>
               <div className="text-xl mx-10 text-center">Enter your address where you would like to receive it</div>
               <div className="m-5">
                 <AddressInput placeholder="Address or ENS" value={receiverAddr} onChange={setReceiverAddr} />
               </div>
             </>
+          )}
+          {fetchedTokenId !== undefined && fetchedTokenId > 0n && (
+            <div>
+              <div className="text-lg mb-5"> Already Minted</div>
+              <Card3d
+                content={
+                  <div className="h-full flex flex-col items-center justify-between">
+                    <ShowNFT tokenId={fetchedTokenId} />
+                  </div>
+                }
+              />
+            </div>
           )}
           {receiverAddr.length == 42 && receiverAddr.startsWith("0x") && (
             <div className="mt-5">
@@ -126,8 +152,16 @@ const MintPage: NextPage = () => {
                       <p>Zk-Mint</p>
                     </div>
                     {isMinting && <span className="loading loading-spinner w-36" />}
-                    {/* TODO display img from nft */}
-                    {mintConfirmation && <p className="text-9xl font-bai-jamjuree">1</p>}
+                    {mintConfirmation && (
+                      <>
+                        <ShowNFT tokenId={fetchedTokenId} />
+                      </>
+                    )}
+                    {fetchedTokenId !== undefined && fetchedTokenId > 0 && (
+                      <>
+                        <ShowNFT tokenId={fetchedTokenId} />
+                      </>
+                    )}
                     {!isMinting && !mintConfirmation && (
                       <>
                         <p className="text-9xl">?</p>

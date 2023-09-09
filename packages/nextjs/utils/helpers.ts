@@ -16,6 +16,11 @@ export function toHexString(bytes: Uint8Array): string {
 export function toDecimalString(bytes: Uint8Array): string {
   return BigInt("0x" + toHexString(bytes)).toString();
 }
+
+export async function calcNullifier(code: string): Promise<bigint> {
+  const poseidon = await buildPoseidon();
+  return BigInt(poseidon.F.toString(poseidon([toDecimalString(fromHexString(code))])));
+}
 /**
  *
  * @param code is a hex string
@@ -66,7 +71,7 @@ export async function generateProof(
   const { proof, publicSignals } = await groth16.fullProve(input, "coupon.wasm", "coupon.zkey");
   //convert proof to solidity inputs
   const { a, b, c } = getABCFrom(proof);
-  // console.log([a, b, c, publicSignals]);
+  console.log("proof", [a, b, c, publicSignals]);
   return { a, b, c, publicSignals };
 }
 

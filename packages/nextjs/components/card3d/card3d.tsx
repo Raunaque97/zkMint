@@ -55,7 +55,7 @@ export const Card3d = ({ content = <></> }: { content?: ReactNode }) => {
   return (
     <div
       id="card-3d"
-      className="p-[1em] w-[300px] h-[400px] rounded-2xl bg-cover relative duration-500 transition-all ease-out shadow shadow-black hover:shadow-2xl"
+      className="w-[300px] h-[400px] rounded-2xl bg-cover relative duration-500 transition-all ease-out shadow shadow-black hover:shadow-2xl"
       style={{
         backgroundImage: "url(./card_bg1.jpg)",
       }}
